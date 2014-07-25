@@ -11,7 +11,7 @@ from math import sqrt, cos
 workDirLoc = '/home/cranelli/WGamGam/Anomolous_QGC/CMSSW_5_3_12/src/Anomolous_QGC/Analysis/'
 inRootFileDir = '/home/cranelli/WGamGam/Anomolous_QGC/CMSSW_5_3_12/src/Anomolous_QGC/Analysis/test/'
 
-inRootFileName = "/LNuAA_SM.root"
+inRootFileName = "../../../../LNuAA_SM/Analysis/LNuAA_SM.root"
 TREENAME = "LHEF"
 
 gSystem.Load( 'ExRootClasses_cc.so')
@@ -26,7 +26,7 @@ from ROOT import TRootLHEFParticle
 inRootFileLoc = inRootFileName
 inRootFile = TFile(inRootFileLoc, "READ")
 # Set Histograms
-h1Mt = TH1F("h1"+prefix+"Mt", prefix + "Transverse Mass LV", 20, 0, 100)
+h1Mt = TH1F("h1"+"Mt", "Transverse Mass LV", 20, 0, 100)
 
 
 analysis_tree = inRootFile.Get(TREENAME)
@@ -79,8 +79,8 @@ outRootFile = TFile("../LNuAATreeLoop.root", 'UPDATE')
 outRootFile.cd() 
 #outRootFile.Write #Does not seem to have anything in memmory.
 #h1PhoLeadPt.Draw()
-h1PhoLeadPt.Write()
-h1PhoLeadPtWeighted.Write()
+#h1PhoLeadPt.Write()
+#h1PhoLeadPtWeighted.Write()
 h1Mt.Write()
 
 inRootFile.Close()
