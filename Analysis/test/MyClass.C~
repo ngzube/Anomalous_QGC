@@ -1,0 +1,121 @@
+#define MyClass_cxx
+#include "MyClass.h"
+#include <TH2.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+
+void MyClass::Loop()
+{
+//   In a ROOT session, you can do:
+//      Root > .L MyClass.C
+//      Root > MyClass t
+//      Root > t.GetEntry(12); // Fill t data members with entry number 12
+//      Root > t.Show();       // Show values of entry 12
+//      Root > t.Show(16);     // Read and show values of entry 16
+//      Root > t.Loop();       // Loop on all entries
+//
+
+   //***MY CODE***
+   //Histogram declarations
+   TH1F *hPID;	// PID
+   TH1F *hPT;	// pt of the particles
+   TH1F *hphotonPT;	// pt of photons
+   TH1F *hp1pt;	// pt of leading (higher energy) photons
+   TH1F *hp2pt;	// pt of non-leading (lower energy) photons
+   static Int_t photonID = 22;
+   Int_t first1 = 0;
+
+   // create histograms
+   hPID = new TH1F("hPID", "Counts of particle ID's",54,-27,27);
+   hPID->GetXaxis()->SetTitle("PID");
+   hPID->GetXaxis()->CenterTitle(1);
+   hPID->GetYaxis()->SetTitle("Counts");
+   hPID->GetYaxis()->CenterTitle(1);
+
+   hPT = new TH1F("hPT", "Counts of particle pt", 30, 0, 150);
+   hPT->GetXaxis()->SetTitle("PT");
+   hPT->GetXaxis()->CenterTitle(1);
+   hPT->GetYaxis()->SetTitle("Counts");
+   hPT->GetYaxis()->CenterTitle(1);
+
+   hphotonPT = new TH1F("hphotonPT", "Counts of photon pt", 30, 0, 150);
+   hp1pt = new TH1F("hp1pt", "Counts of leading photon pt", 30, 0, 150);
+   hp2pt = new TH1F("hp2pt", "Counts of 2nd photon pt", 30, 0, 150);
+
+//     This is the loop skeleton where:
+//    jentry is the global entry number in the chain
+//    ientry is the entry number in the current Tree
+//  Note that the argument to GetEntry must be:
+//    jentry for TChain::GetEntry
+//    ientry for TTree::GetEntry and TBranch::GetEntry
+//
+//       To read only selected branches, Insert statements like:
+// METHOD1:
+//    fChain->SetBranchStatus("*",0);  // disable all branches
+//    fChain->SetBranchStatus("branchname",1);  // activate branchname
+// METHOD2: replace line
+//    fChain->GetEntry(jentry);       //read all branches
+//by  b_branchname->GetEntry(ientry); //read only this branch
+   if (fChain == 0) return;
+
+   Long64_t nentries = fChain->GetEntriesFast();
+  
+   Long64_t nbytes = 0, nb = 0;
+   for (Long64_t jentry=0; jentry<nentries;jentry++) {
+      Long64_t ientry = LoadTree(jentry);
+      if (ientry < 0) break;
+      nb = fChain->GetEntry(jentry);   nbytes += nb;
+      // if (Cut(ientry) < 0) continue;
+      for(Int_t j1=0; j1<kMaxParticle; j1++){
+	     hPID->Fill(Particle_PID[j1]);
+	     hPT->Fill(Particle_PT[j1]);
+
+	     //Loops for recording PT for photons
+	     if(Particle_PID[j1]==photonID){
+		     hphotonPT->Fill(Particle_PT[j1]);
+		     if(first1==0){
+		     for(Int_t j2=0; j2<kMaxParticle; j2++){
+			     first1=1;
+			     if((Particle_PID[j2]==photonID) && (j2!=j1)){
+
+				     if(Particle_PT[j1]>Particle_PT[j2]){
+					     hp1pt->Fill(Particle_PT[j1]);
+					     hp2pt->Fill(Particle_PT[j2]);
+				     }
+				     else{
+					     hp1pt->Fill(Particle_PT[j2]);
+					     hp2pt->Fill(Particle_PT[j1]);
+				     }
+			     }
+		     }
+		     }
+	     }
+
+      }
+      first1=0;
+
+   }
+
+   //Plot all histograms on a large canvas
+   TCanvas *MyC = new TCanvas("MyC","test canvas",1);
+	   MyC->Divide(3,2);
+	   MyC->cd(1);
+	   hPID->Draw();
+ 	   MyC->cd(2);
+	   hPT->Draw();
+ 	   MyC->cd(3);
+	   hphotonPT->Draw();
+	   MyC->cd(4);
+	   hp1pt->Draw();
+	   MyC->cd(5);
+	   hp2pt->Draw();
+
+   THStack hs("hs","test stacked histograms");
+	   hs.Add(hp1pt);
+	   hs.Add(hp2pt);
+	   MyC->cd(6);
+	   hs->Draw("nostack");
+
+
+
+}
