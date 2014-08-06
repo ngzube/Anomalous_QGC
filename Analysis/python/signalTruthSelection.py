@@ -7,12 +7,17 @@ from ROOT import TH1F, TH2F
 from ROOT import TBranchElement
 from math import sqrt, cos
 #import sys
-#My Own Help Functions
-import selectionCuts
+#My Own Helper Modules
+import particleIdentification
+import objectCuts
+import overlapCuts
+import eventCuts
+import histogramBuilder
 
 #
 # Define Root Files and Tree Locations and Names
 #
+
 workDirLoc = '/home/cranelli/WGamGam/Anomolous_QGC/CMSSW_5_3_12/src/Anomolous_QGC/Analysis/python/'
 inRootFileDir = '../test/'
 inRootFileName = 'signalTruth_WAA_ISR_Job0.root'
@@ -25,6 +30,7 @@ outRootFileName = 'signalTruthISRSelection.root'
 #
 # Begining of Analysis Code
 #
+
 def signalTruthSelection():
 
     inRootFileLoc = inRootFileDir + inRootFileName
@@ -45,7 +51,10 @@ def signalTruthSelection():
     num_entries = analysis_tree.GetEntries()
     print "Number of Entries: ", num_entries
     
-
+    #
+    # Loop Over Entries
+    #
+    
     for entry in xrange(num_entries):
         analysis_tree.GetEntry(entry)
         # print analysis_tree.__dict__
@@ -54,51 +63,55 @@ def signalTruthSelection():
         # event = analysis_tree.Event[0]
         # weight = event.Weight
 
-        #Will be filled with TLorentz Vector, for now.
+        # Assign Particles
+        # Will be filled with TLorentz Vector, for now.
         photons = []
         electrons = []
         muons = []
-        leptons = []
         nu_es = []
         nu_ms = []
-        nus = []
         ws = []
-        
-        truthIDs = analysis_tree.mcPID
-        for index in xrange(analysis_tree.nMC):
-            """
-            if truthIDs[index] == 22: photons.append(index)
-            if abs(truthIDs[index]) == 11: electrons.append(index); leptons.append(index)
-            if abs(truthIDs[index]) == 13: muons.append(index); leptons.append(index)
-            if abs(truthIDs[index]) == 12: nu_es.append(index); nus.append(index)
-            if abs(truthIDs[index]) ==14: nu_ms.append(index); nus.append(index)
-            if abs(truthIDs[index]) == 24: ws.append(index)
-            """
-        
-            if truthIDs[index] == 22: photons.append(makeTL(analysis_tree, index))
-            # if particle.PID == 11 or particle.PID == -11: print particle.PID; print "lepton"
-            if abs(truthIDs[index]) == 11:
-                electrons.append(makeTL(analysis_tree, index))
-                leptons.append(makeTL(analysis_tree, index))
-            if abs(truthIDs[index]) == 13:
-                muons.append(makeTL(analysis_tree, index))
-                leptons.append(makeTL(analysis_tree, index))
-            if abs(truthIDs[index]) == 12:
-                nu_es.append(makeTL(analysis_tree, index))
-                nus.append(makeTL(analysis_tree, index))
-            if abs(truthIDs[index]) == 14:
-                nu_ms.append(makeTL(analysis_tree, index))
-                nus.append(makeTL(analysis_tree, index))
-            if abs(truthIDs[index]) == 24:
-                ws.append(makeTL(analysis_tree, index))
+
+        #
+        # Particle Identification
+        #
+
+        particleIdentification.assignParticles(analysis_tree, photons, electrons, muons, nu_es, nu_ms, ws)
+        histogramBuilder.fillStandardHistograms(photons, electrons, muons, "PreCut")
+
         #
         # Selection Cuts
         #
+
+        # Object Cuts
         # Make Kinematic Selection Cuts
-        photons = selectionCuts.selectOnPhotonKinematics(photons)
-        #electrons = selectionCuts.selectOnElectronKinematics(electrons)
-        #muons = selectionCuts.selectOnMuonKinematics(muons)
-        # Make Delta R Selection Cuts
+        photons = objectCuts.selectOnPhotonKinematics(photons)
+        electrons = objectCuts.selectOnElectronKinematics(electrons)
+        muons = objectCuts.selectOnMuonKinematics(muons)
+
+        # Overlap Cuts
+
+        # Event Cuts
+        if not eventCuts.passReqNumParticles(photons, electrons, muons): continue
+        if not eventCuts.passPhotonPhotonDeltaR(photons): continue
+        # Electron Channel
+        if len(electrons) == 1:
+            if not eventCuts.passPhotonElectronDeltaR(photons, electrons): continue
+            histogramBuilder.fillStandardHistograms(photons, electrons, muons, "PostEventCuts_ElectronChannel")
+            
+        # Muon Channel
+        if len(muons) == 1:
+            if not eventCuts.passPhotonMuonDeltaR(photons, muons): continue
+            histogramBuilder.fillStandardHistograms(photons, electrons, muons, "PostEventCuts_MuonChannel")
+        
+
+        #
+        # Analysis
+        #
+        leptons = electrons + muons
+        nus = nu_es + nu_ms
+
+
         leadPhoton = selectLead(photons)
         #lepton = selectLead(leptons) # Have signal electron be the one with highest Pt 
         #nu = selectLead(nus)
@@ -121,20 +134,13 @@ def signalTruthSelection():
     h1PhoLeadPt.Write()
     h1PhoLeadEta.Write()
     #Iterate Over Selection Histograms
-    for key, Histogram in selectionCuts.SelectionHistograms.iteritems():
+    for key, Histogram in histogramBuilder.Histograms.iteritems():
         Histogram.Write()
     #h2M3M4.Write()
     # h1PhoLeadPtWeighted.Write(
     # h1Mt.Write()
     inRootFile.Close()
     outRootFile.Close()
-
-def makeTL(analysis_tree, index):
-    photonTL = TLorentzVector()
-    # Define TLorentz Vector
-    photonTL.SetPtEtaPhiE(analysis_tree.mcPt[index], analysis_tree.mcEta[index],
-                          analysis_tree.mcPhi[index],analysis_tree.mcE[index])
-    return photonTL
 
 def selectLead(particles):
     maxPt = 0
