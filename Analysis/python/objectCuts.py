@@ -1,8 +1,8 @@
 """Selection Cuts - Makes Selection Cuts for LNuAA Analysis"""
 
 # Python Module For Selection Cuts
-# Created by Christopher Anelli
-# 8.4.2014
+# Created by Christopher Anelli, 8.4.2014
+# Tested in Python 2.6.4
 
 from ROOT import TLorentzVector
 from ROOT import TH1F, TH2F
@@ -20,7 +20,7 @@ minElectronPt = 30
 maxElectronEta = 2.5
 # Muons
 minMuonPt = 25
-maxMuonEta = 2.5
+maxMuonEta = 2.4
 
 def selectOnPhotonKinematics(photons):
     #if photons != None:
@@ -28,8 +28,8 @@ def selectOnPhotonKinematics(photons):
     photons = filter(lambda photon: photon.Pt() > minPhotonPt, photons)
     histogramBuilder.fillPtHistograms(photons, 'Photon_Pt_PostPhotonPtCut')
     photons = filter(lambda photon: abs(photon.Eta()) < maxPhotonEta, photons)
-    photons = filter(lambda photon: abs(photon.Eta()) < minPhotonEndCapEta
-                     or abs(photon.Eta()) > maxPhotonEndCapEta, photons)
+    #photons = filter(lambda photon: abs(photon.Eta()) < minPhotonEndCapEta
+    #                 or abs(photon.Eta()) > maxPhotonEndCapEta, photons)
     histogramBuilder.fillEtaHistograms(photons, 'Photon_Eta_PostPhotonEtaCut')
     return photons
 

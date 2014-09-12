@@ -1,8 +1,9 @@
 """Selection Cuts - Makes Selection Cuts for LNuAA Analysis"""
 
+# Not currently in use
 # Python Module For Selection Cuts
-# Created by Christopher Anelli
-# 8.4.2014
+# Created by Christopher Anelli, 8.4.2014
+# Edits by Nicholas Zube, 8.21.2014
 
 from ROOT import TLorentzVector
 from ROOT import TH1F, TH2F

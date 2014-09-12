@@ -1,14 +1,14 @@
-"""Selection Cuts - Makes Selection Cuts for LNuAA Analysis"""
+"""Event Cuts - Makes Event Cuts for LNuAA Analysis"""
 
-# Python Module For Selection Cut s
-# Created by Christopher Anelli
-# 8.4.2014
+# Python Module For Event Cuts
+# Created by Christopher Anelli, 8.4.2014
+# Tested in Python 2.6.4
 
 from ROOT import TLorentzVector
-from ROOT import TH1F, TH2F
+#from ROOT import TH1F, TH2F
+#from math import sqrt, cos
 
-import histogramBuilder
-
+#import histogramBuilder
 
 # Particle Number
 reqNumPhotons = 2
@@ -18,6 +18,8 @@ reqNumLeptons = 1
 minPhotonPhotonDeltaR = 0.3
 minPhotonElectronDeltaR = 0.4
 minPhotonMuonDeltaR = 0.4
+
+zMass = 91.2
 
 #Reject Event if it does not have a Single Lepton and Two Photons
 def passReqNumParticles(photons, electrons, muons):
@@ -35,7 +37,7 @@ def passPhotonPhotonDeltaR(photons):
     # Only if all pairings pass
     return True 
 
-# Reject Event if  Photon and Electron are too close
+# Reject Event if Photon and Electron are too close
 def passPhotonElectronDeltaR(photons, electrons):
     for photon in photons:
         for electron in electrons:
@@ -50,3 +52,20 @@ def passPhotonMuonDeltaR(photons, muons):
     # Only if all pairings pass
     return True
 
+def passZ2Mass(photons, electrons):
+    for photon in photons:
+        for electron in electrons:
+            M = (electron + photon).M()
+            if abs(M - zMass) < 5: return False
+    # Only if all pairings pass
+    return True
+
+def passZ3Mass(photons, electrons):
+    for photon1 in photons:
+        for photon2 in photons:
+            if photon1 == photon2: continue # Do Not Compare it to Itself
+            for electron in electrons:
+                M = (electron + photon1 + photon2).M()
+                if abs(M - zMass) < 5: return False
+    # Only if all pairings pass
+    return True
