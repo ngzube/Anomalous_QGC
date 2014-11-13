@@ -13,15 +13,22 @@ class particleData(TLorentzVector):
         super(particleData, self).__init__()
         self.sPID = 0
         self.sMomPID = 0
+        self.status = 0
 
     def MomPID(self):
         return self.sMomPID
                 
     def PID(self):
         return self.sPID
+    
+    def Status(self):
+        return self.status
                 
     def SetMomPID(self, iMomPID):
         self.sMomPID = iMomPID
 
     def SetPID(self, iPID):
         self.sPID = iPID
+        
+    def SetStatus(self, iStatus):
+        self.status = iStatus

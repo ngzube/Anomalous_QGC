@@ -37,38 +37,54 @@ def histToPNG(inRootFileLoc, dirLoc = ""):
     del fromPad
     del writeImage
     
-def makeAcceptanceTable(evEcounts, evMcounts):
-    outFileName = "acceptanceTable.txt"
+def makeAcceptanceTable(evEcounts, evMcounts, 
+                        outFileName = "acceptTable"):
+    outFileName = outFileName + ".txt"
     f = open(outFileName, "w")
-    f.write(" \t \t \t" + 
-            "Electron channel\t \t \t" +
-            "Muon channel\t \t\n")
     f.write("#\tParticle\tCut\t" + 
             "Events passed\tEvents passed/total\tEfficiency/previous\t" +
             "Events passed\tEvents passed/total\tEfficiency/previous\n")
-    part = ["-", "&gamma;", "e", "&mu;", "&gamma;", "e", "&mu;", 
-            "e&gamma;&gamma;", "&mu;&gamma;&gamma;", "e&gamma;",
+    part = ["Lep&gamma;&gamma;", 
+            "&gamma;", 
+            "e", 
+            "&mu;", 
+            "&gamma;", 
+            "e", 
+            "&mu;", 
+            "Lep&gamma;&gamma;",
+            "&gamma;&gamma;", 
+            "Lep&gamma;",
+            "e&gamma;",
             "e&gamma;&gamma;"]
-    cut = ["-", "PT > 15 GeV, |&eta;| < 2.5", "PT > 30 GeV, |&eta;| < 2.5", 
-           "PT > 25 GeV, |&eta;| < 2.4", "|MomID| < 25", "|MomID| = 24", 
+    cut = ["At least 1 Lep, 2 &gamma;", 
+           "PT > 15 GeV, |&eta;| < 2.5", 
+           "PT > 30 GeV, |&eta;| < 2.5", 
+           "PT > 25 GeV, |&eta;| < 2.4", 
+           "|MomID| < 25", 
            "|MomID| = 24", 
-           "DeltaR(Lep,&gamma;) > 0.4, DeltaR(&gamma;&gamma;) > 0.3",
+           "|MomID| = 24", 
+           "Exactly 1 Lep, 2 &gamma;",
+           "DeltaR(&gamma;&gamma;) > 0.3", 
+           "DeltaR(Lep,&gamma;) > 0.4",
            "|Mass(Z) - Mass(Lep+&gamma;)| > 5 GeV", 
            "|Mass(Z) - Mass(Lep+&gamma;+&gamma;)| > 5 GeV"]
     for i in xrange(len(evEcounts)):
+        if i == 7:
+            f.write(" \t \t \t" + "Electron channel\t \t \t" +
+                    "Muon channel\t \t\n")
         f.write(str(i) + "\t")
         f.write(part[i] + "\t")
         f.write(cut[i] + "\t")
         f.write(str(evEcounts[i]) + "\t")
-        f.write(str(round(float(evEcounts[i])/evEcounts[0],4)) + "\t")
+        f.write(str(round(float(evEcounts[i])/evEcounts[0],5)) + "\t")
         if(i>0 and evEcounts[i-1] > 0): 
-            f.write(str(round(float(evEcounts[i])/evEcounts[i-1],4))+"\t")
+            f.write(str(round(float(evEcounts[i])/evEcounts[i-1],3))+"\t")
         else: f.write("-\t")
-        if i<len(evMcounts):
+        if i > 6 and i < 10:
             f.write(str(evMcounts[i]) + "\t")
-            f.write(str(round(float(evMcounts[i])/evMcounts[0],4)) + "\t")
-            if(i>0  and evMcounts[i-1] > 0): 
-                f.write(str(round(float(evMcounts[i])/evMcounts[i-1],4)))
+            f.write(str(round(float(evMcounts[i])/evMcounts[0],5)) + "\t")
+            if(i>6  and evMcounts[i-1] > 0): 
+                f.write(str(round(float(evMcounts[i])/evMcounts[i-1],3)))
             else: f.write("-")
         else:
             f.write("-\t-\t-")

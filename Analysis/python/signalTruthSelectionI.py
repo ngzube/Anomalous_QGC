@@ -29,15 +29,15 @@ import histPublish
 # Input file names
 workDirLoc = '/home/nzube/qgc/CMSSW_5_3_19/src/Anomolous_QGC/Analysis/python/'
 inRootFileDir = '../'
-inRootFileName = 'signaltruth_job_summer12_Wgg_FSR.root'
+inRootFileName = 'signaltruth_job_summer12_WAA_ISR.root'
 treeLoc = 'ggNtuplizer/EventTree'
 # Output file names
-outRootFileName = 'signalTruthFSRSelection_Full.root'
-histDirLoc = 'histF/'
-acceptanceTableFileName = "FSR"
+outRootFileName = 'signalTruthISRSelection_Full.root'
+histDirLoc = 'histI/'
+acceptanceTableFileName = "ISR"
 ptBins = [15, 25, 40, 80]
 
-def signalTruthSelection():
+def signalTruthSelectionI():
 
     inRootFileLoc = inRootFileDir + inRootFileName
     inRootFile = TFile(inRootFileLoc, "READ")
@@ -332,5 +332,5 @@ def whichPTBin(leadPhoton, ptBins):
     return 0
 
 if __name__=="__main__":
-    signalTruthSelection()
+    signalTruthSelectionI()
     

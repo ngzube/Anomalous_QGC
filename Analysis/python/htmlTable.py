@@ -6,15 +6,21 @@
 
 class HTMLTable:
     
-    def __init__(self, rows = 1, cols = 1):       
+    def __init__(self, rows = 1, cols = 1, fileName = "HTMLTable"):       
         self.nRows = 1
-        self.nCols = 1       
+        self.nCols = 1
+        self.fileTitle = fileName       
         if(rows > 0): self.nRows = rows;
         if(cols > 0): self.nCols = cols;
         
-        self.cells = [[""] * self.nCols] * self.nRows
+        self.cells = []
+        self.cellAlign = []    
+        self.cellsSingleRow = [""] * self.nCols
+        self.cellAlignSingleRow = ["middle"] * self.nCols
+        for i in xrange(self.nRows):
+            self.cells.append(self.cellsSingleRow[:])
+            self.cellAlign.append(self.cellAlignSingleRow[:])
         self.rowAlign = ["center"] * self.nRows
-        self.cellAlign = [["middle"] * self.nCols] * self.nRows
         self.tSettings = ["title", "2", "2", "3", "border", "all", 
                           "summary of table"]
         self.currentRow = 0
@@ -22,7 +28,8 @@ class HTMLTable:
 
 
     def BuildFromFile(self, fileLocation):
-        with open(fileLocation) as infile:          
+        with open(fileLocation) as infile:
+            HTMLFileName = fileLocation.translate(None,".txt") + ".html"          
             bRows = 0
             bCols = 0
             bcells = []
@@ -30,36 +37,32 @@ class HTMLTable:
             for line in infile:
                 # Create a list of "cell strings" separated by the delimiter
                 lineList = line.split(delimiter)
+                # Remove \n from line string
+                for entry in xrange(len(lineList)):
+                    lineList[entry] = lineList[entry].translate(None, "\n")
                 if len(lineList) > bCols: 
                     bCols = len(lineList)
+                    
                 bcells.append(lineList)
                 bRows += 1                               
             table = HTMLTable(bRows, bCols)            
+            
             # Add blank strings to make all rows same size as largest
             for row in bcells:
                 while len(row) < bCols:
                     row.append("-")
             # Fill table
-            print "Pre input:",bRows,bCols
-            for row in range(bRows):
-                for col in range(bCols):
-                    print bcells[row][col], str(row), str(col)
+            for row in xrange(bRows):
+                for col in xrange(bCols):
                     table.Add(bcells[row][col], row, col)
-                    print table.Look(row,col)
-            print "\n\nAfter:"      
-            for row in range(bRows):
-                for col in range(bCols):
-                    print table.Look(row,col)
-                   
-                    
-            table.Print()         
+                                        
+            table.Print(HTMLFileName)         
 
     def Add(self, entry = "", row = 0, col = 0):
-        self.GoTo(row,col)      
+        self.GoTo(row,col)
         self.cells[self.currentRow][self.currentCol] = entry
         # Move the next horizontal cell
-        self.currentCol += 1
-        
+        self.currentCol += 1        
         # If not on last row
         if self.currentRow < self.nRows-1:
             # If beyond final column in row, go to beginning of next row
@@ -93,17 +96,15 @@ class HTMLTable:
             co = (self.cells[self.GetCurrentRow()][self.GetCurrentCol()-1]
                  + ", " + str(self.GetCurrentRow()) + ", "
                  + str(self.GetCurrentCol()-1))
-            return co
+            return (co, "(", str(self.nRows), str(self.nCols),")")
         
     def Output(self):
-        print "Pre-output. nRows:", self.nRows, ", nCols: ", self.nCols
         output = ("<table id=\"{0}\" border=\"{1}\" cellspacing=\"{2}\" cellpadding=\"{3}\" frame=\"{4}\" rules=\"{5}\" summary=\"{6}\"><tbody>"
                   ).format(*tuple(self.tSettings))
         for row in range(self.nRows):
             output += "</tr><tr align=\"{0}\">".format(self.rowAlign[row])
             for col in range(self.nCols):
                 output += "<td valign=\"{0}\">{1}</td>".format(self.cellAlign[row][col], self.cells[row][col])
-                print "Outputting", row, col, self.cells[row][col]
         output += "</tr></tbody></table>\n"
         return output
 

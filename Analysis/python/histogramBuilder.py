@@ -42,28 +42,38 @@ def fillDeltaRHistograms(particles1, particles2, key, bins=200, xmin=0, xmax=10)
             if particle1 != particle2: # Don't Histogram comparison with itself
                 Histograms[key].Fill(particle1.DeltaR(particle2))
         
-def fillMHistograms(m, key, bins=200, xmin=0, xmax=200):
+def fillStatusHistograms(particles, key, bins=8, xmin=0, xmax=4):
+    if not key in Histograms:
+        Histograms[key] = TH1F(key,key, bins, xmin, xmax)
+    for particle in particles: Histograms[key].Fill(particle.Status())
+
+def fillMHistograms(m, key, bins=300, xmin=0, xmax=300):
     if not key in Histograms:
         Histograms[key] = TH1F(key, key, bins, xmin, xmax)
     Histograms[key].Fill(m)
-   
+    
 def fillStandardHistograms(photons, electrons, muons, suffix):
     # Photons
     fillCountHistograms(photons, 'Photon_'+suffix)
     fillPtHistograms(photons, 'Photon_Pt_' + suffix)
     fillEtaHistograms(photons, 'Photon_Eta_' + suffix)
     fillNumParticleHistograms(photons, 'Photon_Num_' + suffix)
+    fillStatusHistograms(photons, "Photon_Status_" + suffix)
     # Electrons
     fillCountHistograms(electrons, 'Electron_' + suffix)
     fillPtHistograms(electrons, 'Electron_Pt_' + suffix)
     fillEtaHistograms(electrons, 'Electron_Eta_' + suffix)
     fillNumParticleHistograms(electrons, 'Electron_Num_' + suffix)
+    fillStatusHistograms(electrons, "Photon_Status_" + suffix)
     # Muons
     fillCountHistograms(muons, 'Muon_' + suffix)
     fillPtHistograms(muons, 'Muon_Pt_' + suffix)
     fillEtaHistograms(muons, 'Muon_Eta_' + suffix)
     fillNumParticleHistograms(muons, 'Muon_Num_' + suffix)
+    fillStatusHistograms(muons, "Photon_Status_" + suffix)
     # Delta R
     fillDeltaRHistograms(photons, electrons, 'DeltaR(Ae)_' + suffix)
     fillDeltaRHistograms(photons, muons, 'DeltaR(AMu)_' + suffix)
     fillDeltaRHistograms(photons, photons, 'DeltaR(AA)_' + suffix)
+    
+

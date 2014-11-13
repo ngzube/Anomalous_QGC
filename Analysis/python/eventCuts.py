@@ -5,10 +5,6 @@
 # Tested in Python 2.6.4
 
 from ROOT import TLorentzVector
-#from ROOT import TH1F, TH2F
-#from math import sqrt, cos
-
-#import histogramBuilder
 
 # Particle Number
 reqNumPhotons = 2
@@ -21,7 +17,7 @@ minPhotonMuonDeltaR = 0.4
 
 zMass = 91.2
 
-#Reject Event if it does not have a Single Lepton and Two Photons
+# Reject Event if it does not have a Single Lepton and Two Photons
 def passReqNumParticles(photons, electrons, muons):
     if len(photons) == reqNumPhotons:
         if len(electrons) == reqNumLeptons and len(muons) == 0: return True

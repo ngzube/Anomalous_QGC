@@ -48,5 +48,7 @@ def makeParticle(tree, index):
     particleFourVector = particleDataClass.particleData()
     particleFourVector.SetPtEtaPhiE(tree.mcPt[index], tree.mcEta[index],
                           tree.mcPhi[index],tree.mcE[index])
-    particleFourVector.SetMomPID(tree.mcMomPID[index])    
+    particleFourVector.SetMomPID(tree.mcMomPID[index]) 
+    particleFourVector.SetStatus(tree.mcStatus[index]) 
+       
     return particleFourVector
