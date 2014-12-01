@@ -37,20 +37,25 @@ def histToPNG(inRootFileLoc, dirLoc = ""):
     del fromPad
     del writeImage
     
-def makeAcceptanceTable(evEcounts, evMcounts, 
+def makeAcceptanceTable(evEcounts, evMcounts, evTcounts, 
                         outFileName = "acceptTable"):
     outFileName = outFileName + ".txt"
     f = open(outFileName, "w")
+    f.write(" \t \t \t" + "Electron channel\t \t \t" +
+            "Muon channel\t \t \t" + "Tau channel\t \t\n")
     f.write("#\tParticle\tCut\t" + 
+            "Events passed\tEvents passed/total\tEfficiency/previous\t" +
             "Events passed\tEvents passed/total\tEfficiency/previous\t" +
             "Events passed\tEvents passed/total\tEfficiency/previous\n")
     part = ["Lep&gamma;&gamma;", 
             "&gamma;", 
             "e", 
-            "&mu;", 
+            "&mu;",
+            "&tau;", 
             "&gamma;", 
             "e", 
             "&mu;", 
+            "&tau;", 
             "Lep&gamma;&gamma;",
             "&gamma;&gamma;", 
             "Lep&gamma;",
@@ -60,8 +65,10 @@ def makeAcceptanceTable(evEcounts, evMcounts,
            "PT > 15 GeV, |&eta;| < 2.5", 
            "PT > 30 GeV, |&eta;| < 2.5", 
            "PT > 25 GeV, |&eta;| < 2.4", 
+           "PT > 25 GeV, |&eta;| < 2.4", 
            "|MomID| < 25", 
-           "|MomID| = 24", 
+           "|MomID| = 15 or 24", 
+           "|MomID| = 15 or 24", 
            "|MomID| = 24", 
            "Exactly 1 Lep, 2 &gamma;",
            "DeltaR(&gamma;&gamma;) > 0.3", 
@@ -69,27 +76,30 @@ def makeAcceptanceTable(evEcounts, evMcounts,
            "|Mass(Z) - Mass(Lep+&gamma;)| > 5 GeV", 
            "|Mass(Z) - Mass(Lep+&gamma;+&gamma;)| > 5 GeV"]
     for i in xrange(len(evEcounts)):
-        if i == 7:
-            f.write(" \t \t \t" + "Electron channel\t \t \t" +
-                    "Muon channel\t \t\n")
         f.write(str(i) + "\t")
         f.write(part[i] + "\t")
         f.write(cut[i] + "\t")
+        
         f.write(str(evEcounts[i]) + "\t")
         f.write(str(round(float(evEcounts[i])/evEcounts[0],5)) + "\t")
         if(i>0 and evEcounts[i-1] > 0): 
             f.write(str(round(float(evEcounts[i])/evEcounts[i-1],3))+"\t")
         else: f.write("-\t")
-        if i > 6 and i < 10:
-            f.write(str(evMcounts[i]) + "\t")
-            f.write(str(round(float(evMcounts[i])/evMcounts[0],5)) + "\t")
-            if(i>6  and evMcounts[i-1] > 0): 
-                f.write(str(round(float(evMcounts[i])/evMcounts[i-1],3)))
-            else: f.write("-")
-        else:
-            f.write("-\t-\t-")
+
+        f.write(str(evMcounts[i]) + "\t")
+        f.write(str(round(float(evMcounts[i])/evMcounts[0],5)) + "\t")
+        if(i>0  and evMcounts[i-1] > 0): 
+            f.write(str(round(float(evMcounts[i])/evMcounts[i-1],3))+"\t")
+        else: f.write("-\t")
+        
+        f.write(str(evTcounts[i]) + "\t")
+        f.write(str(round(float(evTcounts[i])/evTcounts[0],5)) + "\t")
+        if(i>0  and evTcounts[i-1] > 0): 
+            f.write(str(round(float(evTcounts[i])/evTcounts[i-1],3)))
+        else: f.write("-")
+        
         f.write("\n")   
     f.close()              
-    tab = htmlTable.HTMLTable(len(evEcounts)+2, 9)
+    tab = htmlTable.HTMLTable(len(evEcounts)+2, 12)
     tab.BuildFromFile(outFileName)
     

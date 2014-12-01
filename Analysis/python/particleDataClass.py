@@ -1,6 +1,6 @@
-"""Particle Data Class - A class that can store TLorentzVectors, PID, MomPID"""
+"""Particle Data Class - A class that can store TLorentzVectors, plus mc variables"""
 
-# Python Class with extra attributes for data storage
+# Python Class of a TLorentzVector with extra attributes for data storage
 # Subclass of ROOT.TLorentzVector
 # Created by Nicholas Zube, 8.22.2014
 # Tested in Python 2.6.4
@@ -13,7 +13,11 @@ class particleData(TLorentzVector):
         super(particleData, self).__init__()
         self.sPID = 0
         self.sMomPID = 0
+        self.sGMomPID = 0
         self.status = 0
+
+    def GMomPID(self):
+        return self.sGMomPID
 
     def MomPID(self):
         return self.sMomPID
@@ -24,6 +28,9 @@ class particleData(TLorentzVector):
     def Status(self):
         return self.status
                 
+    def SetGMomPID(self, iGMomPID):
+        self.sGMomPID = iGMomPID
+
     def SetMomPID(self, iMomPID):
         self.sMomPID = iMomPID
 

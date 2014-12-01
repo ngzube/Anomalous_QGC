@@ -52,7 +52,7 @@ def fillMHistograms(m, key, bins=300, xmin=0, xmax=300):
         Histograms[key] = TH1F(key, key, bins, xmin, xmax)
     Histograms[key].Fill(m)
     
-def fillStandardHistograms(photons, electrons, muons, suffix):
+def fillStandardHistograms(photons, electrons, muons, taus, suffix):
     # Photons
     fillCountHistograms(photons, 'Photon_'+suffix)
     fillPtHistograms(photons, 'Photon_Pt_' + suffix)
@@ -64,16 +64,23 @@ def fillStandardHistograms(photons, electrons, muons, suffix):
     fillPtHistograms(electrons, 'Electron_Pt_' + suffix)
     fillEtaHistograms(electrons, 'Electron_Eta_' + suffix)
     fillNumParticleHistograms(electrons, 'Electron_Num_' + suffix)
-    fillStatusHistograms(electrons, "Photon_Status_" + suffix)
+    fillStatusHistograms(electrons, "Electron_Status_" + suffix)
     # Muons
     fillCountHistograms(muons, 'Muon_' + suffix)
     fillPtHistograms(muons, 'Muon_Pt_' + suffix)
     fillEtaHistograms(muons, 'Muon_Eta_' + suffix)
     fillNumParticleHistograms(muons, 'Muon_Num_' + suffix)
-    fillStatusHistograms(muons, "Photon_Status_" + suffix)
+    fillStatusHistograms(muons, "Muon_Status_" + suffix)
+    # Taus
+    fillCountHistograms(taus, 'Tau_' + suffix)
+    fillPtHistograms(taus, 'Tau_Pt_' + suffix)
+    fillEtaHistograms(taus, 'Tau_Eta_' + suffix)
+    fillNumParticleHistograms(taus, 'Tau_Num_' + suffix)
+    fillStatusHistograms(taus, "Tau_Status_" + suffix)
     # Delta R
     fillDeltaRHistograms(photons, electrons, 'DeltaR(Ae)_' + suffix)
     fillDeltaRHistograms(photons, muons, 'DeltaR(AMu)_' + suffix)
+    fillDeltaRHistograms(photons, taus, 'DeltaR(At)_' + suffix)
     fillDeltaRHistograms(photons, photons, 'DeltaR(AA)_' + suffix)
     
 

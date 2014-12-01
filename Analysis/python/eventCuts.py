@@ -14,14 +14,16 @@ reqNumLeptons = 1
 minPhotonPhotonDeltaR = 0.3
 minPhotonElectronDeltaR = 0.4
 minPhotonMuonDeltaR = 0.4
+minPhotonTauDeltaR = 0.4
 
 zMass = 91.2
 
 # Reject Event if it does not have a Single Lepton and Two Photons
-def passReqNumParticles(photons, electrons, muons):
+def passReqNumParticles(photons, electrons, muons, taus):
     if len(photons) == reqNumPhotons:
-        if len(electrons) == reqNumLeptons and len(muons) == 0: return True
-        if len(electrons) == 0 and len(muons) == reqNumLeptons: return True
+        if len(electrons) == reqNumLeptons and len(muons) == 0 and len(taus) == 0: return True
+        if len(electrons) == 0 and len(muons) == reqNumLeptons and len(taus) == 0: return True
+        if len(electrons) == 0 and len(muons) == 0 and len(taus) == reqNumLeptons: return True
     return False
 
 # Reject Event if the Photons are Too Close
@@ -48,6 +50,13 @@ def passPhotonMuonDeltaR(photons, muons):
     # Only if all pairings pass
     return True
 
+def passPhotonTauDeltaR(photons, taus):
+    for photon in photons:
+        for tau in taus:
+            if photon.DeltaR(tau) < minPhotonTauDeltaR: return False
+    # Only if all pairings pass
+    return True
+
 def passZ2Mass(photons, electrons):
     for photon in photons:
         for electron in electrons:
@@ -64,4 +73,4 @@ def passZ3Mass(photons, electrons):
                 M = (electron + photon1 + photon2).M()
                 if abs(M - zMass) < 5: return False
     # Only if all pairings pass
-    return True
+    return True   

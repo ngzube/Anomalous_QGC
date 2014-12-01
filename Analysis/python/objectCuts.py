@@ -22,6 +22,9 @@ maxElectronEta = 2.5
 minMuonPt = 25
 maxMuonEta = 2.4
 
+minTauPt = 25
+maxTauEta = 2.4
+
 def selectOnPhotonKinematics(photons):
     #if photons != None:
     # Post Cut Histograms
@@ -47,3 +50,10 @@ def selectOnMuonKinematics(muons):
     muons = filter(lambda muon: abs(muon.Eta()) < maxMuonEta, muons)
     histogramBuilder.fillEtaHistograms(muons, 'Muon_Eta_PostMuonEtaCut')
     return muons
+
+def selectOnTauKinematics(taus):
+    taus = filter(lambda tau: tau.Pt() > minTauPt, taus)
+    histogramBuilder.fillPtHistograms(taus, 'Tau_Pt_PostTauPtCut')
+    taus = filter(lambda taus: abs(taus.Eta()) < maxTauEta, taus)
+    histogramBuilder.fillEtaHistograms(taus, 'Tau_Eta_PostTauEtaCut')
+    return taus

@@ -18,14 +18,23 @@ def selectOnPhotonParent(photons):
     
 def selectOnElectronParent(electrons):
     #if electrons != None:
-    electrons = filter(lambda electron: abs(electron.MomPID()) == 24, electrons)
+    electrons = filter(lambda electron: abs(electron.MomPID()) == 24
+                                        or abs(electron.MomPID()) == 15, electrons)
     histogramBuilder.fillPtHistograms(electrons, 'Electron_Pt_PostWParentCut')
     histogramBuilder.fillEtaHistograms(electrons, 'Electron_Eta_PostWParentCut')
     return electrons
 
 def selectOnMuonParent(muons):
     #if muons != None:
-    muons = filter(lambda muon: abs(muon.MomPID()) == 24, muons)
+    muons = filter(lambda muon: abs(muon.MomPID()) == 24
+                                    or abs(muon.MomPID()) == 15, muons)
     histogramBuilder.fillPtHistograms(muons, 'Muon_Pt_PostWParentCut')
     histogramBuilder.fillEtaHistograms(muons, 'Muon_Eta_PostWParentCut')
     return muons
+
+def selectOnTauParent(taus):
+    #if taus != None:
+    taus = filter(lambda taus: abs(taus.MomPID()) == 24, taus)
+    histogramBuilder.fillPtHistograms(taus, 'Tau_Pt_PostWParentCut')
+    histogramBuilder.fillEtaHistograms(taus, 'Tau_Eta_PostWParentCut')
+    return taus

@@ -35,7 +35,13 @@ treeLoc = 'ggNtuplizer/EventTree'
 outRootFileName = 'signalTruthFSRSelection_Full.root'
 histDirLoc = 'histF/'
 acceptanceTableFileName = "FSR"
-ptBins = [15, 25, 40, 80]
+dressedLeptonsFlag = "off"
+
+# Conditions for analysis: 
+# tauVersion, if set to on, will do the analysis for tau events only
+tauVersion = "off"
+dressedLeptonsFlag = "off"
+ptBins = [0, 15, 25, 40, 70]
 
 def signalTruthSelection():
 
@@ -58,131 +64,159 @@ def signalTruthSelection():
     
     # Lists of events remaining after each cut step 
     # (e.g., event_Electron_count)
-    numberOfCuts = 12    
+    numberOfCuts = 14    
     evEcount = [0] * numberOfCuts
     evMcount = [0] * numberOfCuts
+    evTcount = [0] * numberOfCuts
     countByPT = {}
 
-    # Uses a dictionary to store [Ecounts, Mcounts] by PT bin for each cut
-    # countByPt[pt bin min][cut #][# e counts, # mu counts]
+    # Uses a dictionary to store [Ecounts, Mcounts, Tcounts] by PT bin for each cut
+    # countByPt[pt bin min][cut #][# e counts, # mu counts, # t counts]
     for ptKey in ptBins:
         a = {}
         for cutNum in xrange(numberOfCuts):
-            a[cutNum] = [0,0]
+            a[cutNum] = [0,0,0]
         countByPT[ptKey] = a
             
     # Loop Over Entries (Master Loop)
-    for entry in xrange(num_entries):
+    for entry in xrange(5000):  #!!! change to num_entries
         analysis_tree.GetEntry(entry)
 
         # Assign Particles
         photons = []
         electrons = []
         muons = []
+        taus = []
         nu_es = []
         nu_ms = []
+        nu_ts = []
         ws = []
 
         # Particle Identification step
         particleIdentification.assignParticles(
-                analysis_tree, photons, electrons, muons, nu_es, nu_ms, ws)
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
+                analysis_tree, photons, electrons, muons, taus, nu_es, nu_ms, 
+                nu_ts, ws)
+        
+        # Dressed lepton step: add PT of objects in cone <0.2 deltaR to a lepton
+        if dressedLeptonsFlag == "on":
+            dressLeptons(photons, electrons, muons, taus)      
+       
+        # Lepton channel assignment step: lepton with highest PT sets channel
+        # for the event.
+        channelName = leptonChannelSelect(selectLead(electrons), selectLead(muons),
+                                          selectLead(taus))
+          
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
                 "1_PreCuts_", 0,
-                countByPT, evEcount, evMcount,"both")
+                countByPT, evEcount, evMcount, evTcount, channelName)
+            
 
         # Object Cuts: Make Kinematic Selection Cuts
         photons = objectCuts.selectOnPhotonKinematics(photons)
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
                 "2a_PostPhotonObjectCuts_", 1,
-                countByPT, evEcount, evMcount,"both")
+                countByPT, evEcount, evMcount, evTcount,channelName)
         
         electrons = objectCuts.selectOnElectronKinematics(electrons)
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
                 "2b_PostElectronObjectCuts_", 2,
-                countByPT, evEcount, evMcount,"both")
+                countByPT, evEcount, evMcount, evTcount,channelName)
        
         muons = objectCuts.selectOnMuonKinematics(muons)
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
                 "2c_PostMuonObjectCuts_", 3,
-                countByPT, evEcount, evMcount,"both")
+                countByPT, evEcount, evMcount, evTcount,channelName)
+
+        taus = objectCuts.selectOnTauKinematics(taus)
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
+                "2d_PostTauObjectCuts_", 4,
+                countByPT, evEcount, evMcount, evTcount,channelName)
 
         # Parentage cuts: Make cuts of leptons with non-W parents,
         # and cuts of photons with non-quark/lepton/W parents
         photons = parentCuts.selectOnPhotonParent(photons)
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
-                "3a_PostPhotonParentCuts_", 4,
-                countByPT, evEcount, evMcount,"both") 
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
+                "3a_PostPhotonParentCuts_", 5,
+                countByPT, evEcount, evMcount, evTcount,channelName) 
                    
         electrons = parentCuts.selectOnElectronParent(electrons)
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
-                "3b_PostElectronParentCuts_", 5,
-                countByPT, evEcount, evMcount,"both")   
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
+                "3b_PostElectronParentCuts_", 6,
+                countByPT, evEcount, evMcount, evTcount,channelName)   
 
         muons = parentCuts.selectOnMuonParent(muons)
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
-                "3c_PostMuonParentCuts_", 6,
-                countByPT, evEcount, evMcount,"both") 
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
+                "3c_PostMuonParentCuts_", 7,
+                countByPT, evEcount, evMcount, evTcount,channelName) 
+        
+        taus = parentCuts.selectOnTauParent(taus)
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
+                "3d_PostTauParentCuts_", 8,
+                countByPT, evEcount, evMcount, evTcount,channelName) 
         
         # Event Cuts: beginning of split into electron and muon channels
         # Exact population requirement
-        if not eventCuts.passReqNumParticles(photons, electrons, muons):
+        if not eventCuts.passReqNumParticles(photons, electrons, muons, taus):
             continue
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
-                "4_PostExactPopulationCuts_", 7,
-                countByPT, evEcount, evMcount,"e")         
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
-                "4_PostExactPopulationCuts_", 7,
-                countByPT, evEcount, evMcount,"m")  
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
+                "4_PostExactPopulationCuts_", 9,
+                countByPT, evEcount, evMcount, evTcount,channelName)         
         
         if not eventCuts.passPhotonPhotonDeltaR(photons): 
             continue
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
-                "5_PostPhotonDeltaRCuts_", 8,
-                countByPT, evEcount, evMcount,"e")         
-        [countByPT, evEcount, evMcount] = fillCountAndHist(
-                photons, electrons, muons, ptBins, 
-                "5_PostPhotonDeltaRCuts_", 8,
-                countByPT, evEcount, evMcount,"m")         
+        [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                photons, electrons, muons, taus, ptBins, 
+                "5_PostPhotonDeltaRCuts_", 10,
+                countByPT, evEcount, evMcount, evTcount,channelName)              
         
         # Electron Channel
         if len(electrons) == 1:           
             if not eventCuts.passPhotonElectronDeltaR(photons, electrons):
                 continue
-            [countByPT, evEcount, evMcount] = fillCountAndHist(
-                    photons, electrons, muons, ptBins, 
-                    "6_PostElectronDeltaRCuts_", 9,
-                    countByPT, evEcount, evMcount,"e")         
+            [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                    photons, electrons, muons, taus, ptBins, 
+                    "6_PostElectronDeltaRCuts_", 11,
+                    countByPT, evEcount, evMcount, evTcount,"e")         
             
             if not eventCuts.passZ2Mass(photons, electrons): continue
-            [countByPT, evEcount, evMcount] = fillCountAndHist(
-                    photons, electrons, muons, ptBins, 
-                    "7_PostZ2MCut_", 10,
-                    countByPT, evEcount, evMcount,"e")         
+            [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                    photons, electrons, muons, taus, ptBins, 
+                    "7_PostZ2MCut_", 12,
+                    countByPT, evEcount, evMcount, evTcount,"e")         
             
             if not eventCuts.passZ3Mass(photons, electrons): continue
-            [countByPT, evEcount, evMcount] = fillCountAndHist(
-                    photons, electrons, muons, ptBins, 
-                    "8_PostZ3MCut_", 11,
-                    countByPT, evEcount, evMcount,"e")         
+            [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                    photons, electrons, muons, taus, ptBins, 
+                    "8_PostZ3MCut_", 13,
+                    countByPT, evEcount, evMcount, evTcount,"e")         
 
         # Muon Channel
         if len(muons) == 1:
             if not eventCuts.passPhotonMuonDeltaR(photons, muons): 
                 continue
-            [countByPT, evEcount, evMcount] = fillCountAndHist(
-                    photons, electrons, muons, ptBins, 
-                    "6_PostMuonDeltaRCuts_", 9,
-                    countByPT, evEcount, evMcount,"m")         
+            [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                    photons, electrons, muons, taus, ptBins, 
+                    "6_PostMuonDeltaRCuts_", 11,
+                    countByPT, evEcount, evMcount, evTcount,"m")         
+
+        # Tau Channel
+        if len(taus) == 1:
+            if not eventCuts.passPhotonTauDeltaR(photons, muons): 
+                continue
+            [countByPT, evEcount, evMcount, evTcount] = fillCountAndHist(
+                    photons, electrons, muons, taus, ptBins, 
+                    "6_PostTauDeltaRCuts_", 11,
+                    countByPT, evEcount, evMcount, evTcount,"t")         
 
         mAnalysis(photons, electrons, muons, nu_es, nu_ms, h2M3M4, 
                   "9_PostALL")
@@ -197,7 +231,7 @@ def signalTruthSelection():
     inRootFile.Close()
     outRootFile.Close()
     
-    print("E: ", evEcount, ", M: ", evMcount)
+    print("E: ", evEcount, ", M: ", evMcount, ", T: ", evTcount)
     for ptKey in countByPT:
         print "Bin", ptKey, "by cut:", countByPT[ptKey]
 
@@ -205,21 +239,35 @@ def signalTruthSelection():
     # Note: Run PyROOT in batch mode (-b) to suppress canvas output
     histPublish.histToPNG(outRootFileName, histDirLoc)
     # Make an HTML table of acceptance cut flow
-    histPublish.makeAcceptanceTable(evEcount, evMcount, 
+    histPublish.makeAcceptanceTable(evEcount, evMcount, evTcount, 
                                     acceptanceTableFileName + "_All")
     
     for ptKey in ptBins:
         for i in xrange(numberOfCuts):
             evEcount[i] = countByPT[ptKey][i][0]
             evMcount[i] = countByPT[ptKey][i][1]            
-        histPublish.makeAcceptanceTable(evEcount, evMcount, 
+            evTcount[i] = countByPT[ptKey][i][2]            
+        histPublish.makeAcceptanceTable(evEcount, evMcount, evTcount,  
                                         acceptanceTableFileName + 
                                         "_" + str(ptKey) + "PT")
         
-    
-    
-### Helper Functions
 
+
+
+
+
+
+
+
+
+
+
+
+
+    
+##############################    
+###    Helper Functions    ###
+##############################
 # Boolean: returns true if event has at least 1 lepton and 2 photons
 def eventTest(leptons, photons):
     if len(leptons) > 0 and len(photons) > 1 : return True
@@ -254,35 +302,112 @@ def selectSub(particles):
 
 # Given particle lists and cut information, iterates event counters and
 # stores data in the standard histograms
-def fillCountAndHist(photons, electrons, muons, ptBins, histKey, cutNum,
-                     countByPT, evEcount, evMcount, eORm = 0):
-    if eORm == 0 or eORm == 'e' or eORm == 'E' or eORm == "electron": 
-        eORm = 0
+def fillCountAndHist(photons, electrons, muons, taus, ptBins, histKey, cutNum,
+                     countByPT, evEcount, evMcount, evTcount, channelName = 'e'):
+    if channelName == 'e':
         leptons = electrons
         histKey += "E_"
-    elif eORm == 1 or eORm == 'm' or eORm == 'M' or eORm == "muon": 
-        eORm = 1
+    elif channelName == 'm': 
         leptons = muons
         histKey += "M_"
-    else: 
-        eORm = 2
-        leptons = electrons + muons
+    elif channelName == 't': 
+        leptons = taus
+        histKey += "T_"
     
     if eventTest(leptons, photons):
         photonPTBin = whichPTBin(selectLead(photons), ptBins)
-        if eORm != 1: 
+        if channelName == 'e': 
             evEcount[cutNum] += 1
-            if photonPTBin > 0:
-                countByPT[photonPTBin][cutNum][0] += 1
-        if eORm != 0: 
+            countByPT[photonPTBin][cutNum][0] += 1
+        elif channelName == 'm': 
             evMcount[cutNum] += 1
-            if photonPTBin > 0:
-                countByPT[photonPTBin][cutNum][1] += 1
+            countByPT[photonPTBin][cutNum][1] += 1
+        elif channelName == 't': 
+            evTcount[cutNum] += 1
+            countByPT[photonPTBin][cutNum][2] += 1
               
         histogramBuilder.fillStandardHistograms(photons, electrons, 
-                muons, histKey + str(photonPTBin) + "_PT")
-    return [countByPT, evEcount, evMcount]          
+                muons, taus, histKey + str(photonPTBin) + "_PT")
+    return [countByPT, evEcount, evMcount, evTcount]          
 
+# Given the leading leptons in an event, returns a character indicating
+# which channel the event should be palced in.
+def leptonChannelSelect(leadE, leadM, leadT):
+    if leadE != None:
+        leadEPt = leadE.Pt()
+    else: leadEPt = 0
+    
+    if leadM != None:
+        leadMPt = leadM.Pt()
+    else: leadMPt = 0
+    
+    if leadT != None:
+        leadTPt = leadT.Pt()
+    else: leadTPt = 0
+    
+    if leadMPt > leadEPt and leadMPt > leadTPt:
+        channelName = 'm'
+    elif leadTPt > leadEPt and leadTPt > leadMPt:
+        channelName = 't'
+    # In the unusual case of equal PT, we use electron channel as the default    
+    else:
+        channelName = 'e'
+    return channelName
+
+
+def dressLeptons(photons, electrons, muons, taus):
+    DRLimit = 0.2
+    
+    # If a photon is within the limit DR of a lepton, add the PT (4-vector) to 
+    # that lepton exclusively (breaks to next photon if a dressed match is found).
+    for photon in photons:
+        for electron in electrons:
+            if electron.DeltaR(photon) <= DRLimit:
+                        electron = electron + photon
+                        # Breaks from loop and goes to next photon if a dR<limit match is found
+                        break
+                        
+        # If no matches in electrons are found, muons are checked
+        else:
+            for muon in muons:
+                if muon.DeltaR(photon) <= DRLimit:
+                        muon = muon + photon
+                        break
+            # If no matches in muons are found, taus are checked        
+            else:     
+                for tau in taus:
+                    if tau.DeltaR(photon) <= DRLimit:
+                        tau = tau + photon
+                        break
+
+    # If a lepton is within the limit DR of a lepton, add the smaller PT (4-vector) 
+    # to the lepton with greater PT
+    for electron in electrons:
+        for muon in muons:
+            if electron.DeltaR(muon) <= DRLimit:
+                if electron.Pt() > muon.Pt(): 
+                    electron = electron + muon
+                else: 
+                    muon = muon + electron
+                break
+        else: 
+            for tau in taus:
+                if electron.DeltaR(tau) <= DRLimit:
+                    if electron.Pt() > tau.Pt():
+                        electron = electron + tau
+                    else: 
+                        tau = tau + electron
+                    break
+                
+    for muon in muons:
+        for tau in taus:
+            if muon.DeltaR(tau) <= DRLimit:
+                if muon.Pt() > tau.Pt(): 
+                    muon = muon + tau
+                else: 
+                    tau = tau + muon
+                                   
+    
 # Creates a histogram comparing Mass(L-Nu-g) to Mass (L-L-Nu-g)
 def mAnalysis(photons, electrons, muons, nu_es, nu_ms, h2M3M4, suffix):
     # Leading/Sub-leading Photon Analysis        
@@ -317,7 +442,7 @@ def mAnalysis(photons, electrons, muons, nu_es, nu_ms, h2M3M4, suffix):
         histogramBuilder.fillMHistograms(m4, '4M(A+A+L+Nu)_' + suffix)        
         h2M3M4.Fill(m3, m4)
 
-# Given a photon and a set of bin minimums, returns an integer for which
+# Given a photon and an array of bin minimums, returns an integer for which
 # bin it belongs in        
 def whichPTBin(leadPhoton, ptBins):
     if leadPhoton != None:
@@ -330,6 +455,11 @@ def whichPTBin(leadPhoton, ptBins):
         if leadPhoton.Pt() >= finalMin:
             return finalMin
     return 0
+
+
+
+
+
 
 if __name__=="__main__":
     signalTruthSelection()
