@@ -37,7 +37,7 @@ def histToPNG(inRootFileLoc, dirLoc = ""):
     del fromPad
     del writeImage
     
-def makeAcceptanceTable(evEcounts, evMcounts, evTcounts, 
+def makeAcceptanceTable(evEcounts, evMcounts, evTcounts, numberOfCuts, 
                         outFileName = "acceptTable"):
     outFileName = outFileName + ".txt"
     f = open(outFileName, "w")
@@ -58,7 +58,8 @@ def makeAcceptanceTable(evEcounts, evMcounts, evTcounts,
             "&tau;", 
             "Lep&gamma;&gamma;",
             "&gamma;&gamma;", 
-            "Lep&gamma;",
+            "Lep&gamma;1",
+            "Lep&gamma;2",
             "e&gamma;",
             "e&gamma;&gamma;"]
     cut = ["At least 1 Lep, 2 &gamma;", 
@@ -72,7 +73,8 @@ def makeAcceptanceTable(evEcounts, evMcounts, evTcounts,
            "|MomID| = 24", 
            "Exactly 1 Lep, 2 &gamma;",
            "DeltaR(&gamma;&gamma;) > 0.3", 
-           "DeltaR(Lep,&gamma;) > 0.4",
+           "DeltaR(LeadLep,&gamma;) > 0.4",
+           "DeltaR(SubLep,&gamma;) > 0.4",
            "|Mass(Z) - Mass(Lep+&gamma;)| > 5 GeV", 
            "|Mass(Z) - Mass(Lep+&gamma;+&gamma;)| > 5 GeV"]
     for i in xrange(len(evEcounts)):
@@ -100,6 +102,6 @@ def makeAcceptanceTable(evEcounts, evMcounts, evTcounts,
         
         f.write("\n")   
     f.close()              
-    tab = htmlTable.HTMLTable(len(evEcounts)+2, 12)
+    tab = htmlTable.HTMLTable(numberOfCuts+2, 12)
     tab.BuildFromFile(outFileName)
     
